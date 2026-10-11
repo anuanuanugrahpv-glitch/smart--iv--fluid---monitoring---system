@@ -1,2 +1,2 @@
-# smart--iv--fluid---monitoring---system
+# SMART_IV_FLUID_MONITORING_SYSTEM
 The Smart IV Fluid Monitoring System is a prototype designed to demonstrate the monitoring of intravenous (IV) fluid levels and flow conditions. It provides a dashboard to display the status of multiple patient beds and simulate different conditions, such as low fluid levels, critical levels, and no flow. The system uses HTML, CSS, and JavaScript for the frontend and Python Flask for the backend. It aims to demonstrate how digital monitoring and alert systems can help healthcare staff observe IV fluid conditions more conveniently. The current project is an educational simulation and requires further development and testing before real-world medical use.
