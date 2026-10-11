@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b7285">
+<title>Smart IV | Clinical Monitoring Dashboard</title>
+
+<style>
+:root {
+  --primary: #087f8c;
+  --primary-dark: #066570;
+  --bg: #f3f7fb;
+  --surface: #ffffff;
+  --text: #172b3a;
+  --muted: #64748b;
+  --border: #e2eaf0;
+  --green: #16865c;
+  --green-bg: #e7f7ef;
+  --amber: #a96608;
+  --amber-bg: #fff4d8;
+  --red: #c62838;
+  --red-bg: #ffeaed;
+  --shadow: 0 5px 22px rgba(24, 49, 74, .06);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  transition: background .2s, color .2s;
+}
+
+body.dark {
+  --bg: #101b27;
+  --surface: #192735;
+  --text: #edf4fa;
+  --muted: #a6b5c5;
+  --border: #304253;
+  --green-bg: #173d32;
+  --amber-bg: #44371e;
+  --red-bg: #48252d;
+  --shadow: 0 5px 22px rgba(0, 0, 0, .15);
+}
+
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 3px solid #53b9e8;
+  outline-offset: 3px;
+}
+
+.app { min-height: 100vh; }
+
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  gap: 20px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.brand { display: flex; align-items: center; gap: 12px; }
+
+.brand-icon {
+  width: 45px;
+  height: 45px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--primary);
+  color: white;
+  font-size: 25px;
+}
+
+.brand h1 { font-size: 20px; margin: 0; letter-spacing: -.5px; }
+.brand p { font-size: 12px; color: var(--muted); margin: 4px 0 0; }
+
+.top-actions { display: flex; align-items: center; gap: 12px; }
+
+.connection {
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--green-bg);
+  border-radius: 30px;
+  padding: 9px 12px;
+}
+
+.icon-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px 13px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 225px minmax(0, 1fr);
+  min-height: calc(100vh - 76px);
+}
+
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 24px 15px;
+}
+
+.nav-label {
+  text-transform: uppercase;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--muted);
+  letter-spacing: 1.3px;
+  padding: 0 12px;
+  margin: 8px 0 14px;
+}
+
+.nav-btn {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  border: 0;
+  border-radius: 10px;
+  color: var(--muted);
+  background: transparent;
+  text-align: left;
+  margin-bottom: 5px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.nav-btn:hover, .nav-btn.active {
+  color: var(--primary);
+  background: rgba(8, 127, 140, .10);
+}
+
+.nav-icon { width: 20px; text-align: center; font-size: 17px; }
+
+.sidebar-note {
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  padding: 14px;
+  margin-top: 30px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.main { min-width: 0; padding: 28px; }
+
+.page-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.page-heading h2 { margin: 0; font-size: 26px; letter-spacing: -.7px; }
+.page-heading p { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
+
+.primary-btn {
+  background: var(--primary);
+  color: white;
+  border: 0;
+  border-radius: 10px;
+  padding: 11px 15px;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.primary-btn:hover { background: var(--primary-dark); }
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 26px;
+}
+
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.stat-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.stat-icon {
+  width: 35px;
+  height: 35px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: rgba(8,127,140,.10);
+  font-size: 17px;
+}
+
+.stat-value { font-size: 29px; font-weight: 800; margin: 15px 0 7px; }
+.stat-caption { font-size: 11px; color: var(--muted); }
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 28px 0 16px;
+}
+
+.section-head h3 { font-size: 17px; margin: 0; }
+.section-head p { color: var(--muted); font-size: 12px; margin: 5px 0 0; }
+
+.filters { display: flex; flex-wrap: wrap; gap: 9px; }
+
+.control {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 10px 12px;
+  min-height: 39px;
+}
+
+.search { min-width: 200px; }
+
+.bed-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.bed-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  padding: 19px;
+  box-shadow: var(--shadow);
+  min-width: 0;
+}
+
+.bed-card.critical { border: 1px solid var(--red); }
+.bed-card.low { border: 1px solid var(--amber); }
+
+.bed-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.bed-head h4 { font-size: 16px; margin: 0; }
+.patient-id { color: var(--muted); font-size: 11px; margin-top: 5px; }
+
+.badge {
+  padding: 6px 9px;
+  border-radius: 30px;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.badge.normal { color: var(--green); background: var(--green-bg); }
+.badge.low { color: var(--amber); background: var(--amber-bg); }
+.badge.critical { color: var(--red); background: var(--red-bg); }
+.badge.paused { color: var(--muted); background: var(--border); }
+
+.fluid-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin: 18px 0 10px;
+}
+
+.label { color: var(--muted); font-size: 11px; font-weight: 600; }
+.fluid-number { font-size: 28px; font-weight: 800; }
+.fluid-number small { font-size: 13px; color: var(--muted); }
+
+.progress {
+  height: 9px;
+  background: var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  border-radius: 20px;
+  background: var(--green);
+  transition: width .35s, background .35s;
+}
+
+.progress-bar.low { background: #d99b26; }
+.progress-bar.critical { background: var(--red); }
+
+.metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 17px;
+}
+
+.metric {
+  padding: 12px;
+  background: var(--bg);
+  border-radius: 10px;
+}
+
+.metric strong { display: block; font-size: 18px; margin-top: 7px; }
+.metric span { color: var(--muted); font-size: 10px; }
+
+.alert-strip {
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 14px;
+  font-size: 11px;
+  line-height: 1.5;
+  background: var(--green-bg);
+  color: var(--green);
+}
+
+.alert-strip.warning { background: var(--amber-bg); color: var(--amber); }
+.alert-strip.danger { background: var(--red-bg); color: var(--red); }
+
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 15px;
+}
+
+.small-btn {
+  flex: 1;
+  min-width: 55px;
+  padding: 9px 7px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.small-btn.primary { background: var(--primary); color: white; border-color: var(--primary); }
+.small-btn:hover { filter: brightness(.96); }
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  padding: 20px;
+  margin-top: 24px;
+  box-shadow: var(--shadow);
+}
+
+.priority-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.priority-item:last-child { border-bottom: 0; }
+.priority-dot { font-size: 16px; }
+.priority-item strong { display: block; font-size: 13px; }
+.muted { color: var(--muted); }
+.empty { padding: 28px 10px; text-align: center; color: var(--muted); font-size: 13px; }
+
+.page-view { display: none; }
+.page-view.active { display: block; }
+
+.event-row {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+}
+.event-row:last-child { border-bottom: 0; }
+
+.toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  background: var(--text);
+  color: var(--surface);
+  border-radius: 10px;
+  padding: 14px 18px;
+  box-shadow: var(--shadow);
+  font-size: 13px;
+  max-width: calc(100vw - 40px);
+  z-index: 10;
+  display: none;
+}
+
+.footer { margin-top: 30px; text-align: center; font-size: 11px; color: var(--muted); }
+
+@media (min-width: 1500px) {
+  .bed-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 72px minmax(0, 1fr); }
+  .sidebar { padding: 20px 9px; }
+  .nav-label, .nav-text, .sidebar-note { display: none; }
+  .nav-btn { justify-content: center; padding: 13px 5px; }
+  .nav-icon { font-size: 20px; }
+  .bed-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 639px) {
+  .topbar { padding: 12px 15px; min-height: 68px; }
+  .brand h1 { font-size: 16px; }
+  .brand p { font-size: 10px; }
+  .brand-icon { width: 39px; height: 39px; }
+  .connection { font-size: 10px; padding: 8px; }
+  .top-actions { gap: 6px; }
+  .top-actions .clock { display: none; }
+  .layout { display: block; padding-bottom: 72px; }
+  .sidebar {
+    position: fixed;
+    z-index: 6;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 66px;
+    padding: 5px 7px;
+    border-right: 0;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+  }
+  .sidebar nav { display: flex; width: 100%; justify-content: space-around; }
+  .nav-btn { flex: 1; display: flex; flex-direction: column; gap: 3px; margin: 0; padding: 7px 2px; font-size: 9px; }
+  .nav-text { display: block; }
+  .nav-icon { font-size: 18px; width: auto; }
+  .main { padding: 20px 14px; }
+  .page-heading { align-items: center; }
+  .page-heading h2 { font-size: 22px; }
+  .page-heading p { font-size: 12px; }
+  .stats { gap: 10px; }
+  .stat { padding: 14px; }
+  .stat-value { font-size: 25px; margin-top: 12px; }
+  .stat-top { font-size: 11px; }
+  .stat-icon { width: 29px; height: 29px; }
+  .bed-grid { grid-template-columns: 1fr; }
+  .section-head { align-items: flex-start; flex-direction: column; }
+  .filters { width: 100%; }
+  .search { min-width: 0; width: 100%; }
+  .filters .control { flex: 1; min-width: 0; }
+  .priority-item { align-items: flex-start; }
+  .panel { padding: 15px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-icon" aria-hidden="true">✚</div>
+    <div>
+      <h1>Smart IV <span style="color:var(--primary)">Monitor</span></h1>
+      <p>Clinical Fluid Management System</p>
+    </div>
+  </div>
+  <div class="top-actions">
+    <span class="connection">● Demo connected</span>
+    <span class="muted clock" id="clock" aria-label="Current time">--:--:--</span>
+    <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode" title="Toggle theme">☾</button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <nav aria-label="Main navigation">
+      <div class="nav-label">Workspace</div>
+      <button class="nav-btn active" data-page="dashboard"><span class="nav-icon">▦</span><span class="nav-text">Dashboard</span></button>
+      <button class="nav-btn" data-page="alerts"><span class="nav-icon">♧</span><span class="nav-text">Alerts <span id="navAlertCount"></span></span></button>
+      <button class="nav-btn" data-page="history"><span class="nav-icon">◷</span><span class="nav-text">Event History</span></button>
+      <button class="nav-btn" data-page="simulation"><span class="nav-icon">⚙</span><span class="nav-text">Simulation</span></button>
+      <button class="nav-btn" data-page="settings"><span class="nav-icon">☷</span><span class="nav-text">Settings</span></button>
+    </nav>
+    <div class="sidebar-note">
+      <strong style="color:var(--text)">Prototype environment</strong><br>
+      All readings are simulated locally. This dashboard is not connected to medical devices.
+    </div>
+  </aside>
+
+  <main class="main">
+    <section class="page-view active" id="page-dashboard">
+      <div class="page-heading">
+        <div>
+          <h2>Monitoring Overview</h2>
+          <p>Monitor simulated IV units and review priority events.</p>
+        </div>
+        <button class="primary-btn" id="refreshBtn">↻ Refresh</button>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-top">Total IV units <span class="stat-icon">💧</span></div>
+          <div class="stat-value" id="totalStat">3</div>
+          <div class="stat-caption">Registered beds</div>
+        </div>
+        <div class="stat">
+          <div class="stat-top">Running <span class="stat-icon">▶</span></div>
+          <div class="stat-value" id="runningStat">3</div>
+          <div class="stat-caption">Active simulated infusions</div>
+        </div>
+        <div class="stat">
+          <div class="stat-top">Low fluid <span class="stat-icon">◒</span></div>
+          <div class="stat-value" id="lowStat">0</div>
+          <div class="stat-caption">At or below 30% remaining</div>
+        </div>
+        <div class="stat">
+          <div class="stat-top">Critical alerts <span class="stat-icon">⚠</span></div>
+          <div class="stat-value" id="criticalStat">0</div>
+          <div class="stat-caption">At or below 15% remaining</div>
+        </div>
+      </div>
+
+      <div class="section-head">
+        <div>
+          <h3>Patient IV units</h3>
+          <p>Sorted by fluid-level urgency</p>
+        </div>
+        <div class="filters">
+          <input class="control search" id="searchInput" placeholder="Search bed or patient..." aria-label="Search beds">
+          <select class="control" id="statusFilter" aria-label="Filter by status">
+            <option value="all">All statuses</option>
+            <option value="normal">Normal</option>
+            <option value="low">Low fluid</option>
+            <option value="critical">Critical</option>
+            <option value="paused">Paused</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="bed-grid" id="bedGrid"></div>
+
+      <section class="panel">
+        <div class="section-head" style="margin-top:0">
+          <div><h3>Priority management</h3><p>Review the most urgent simulated readings first.</p></div>
+          <button class="icon-btn" data-goto="alerts">View alerts →</button>
+        </div>
+        <div id="priorityList"></div>
+      </section>
+    </section>
+
+    <section class="page-view" id="page-alerts">
+      <div class="page-heading">
+        <div><h2>Alert Center</h2><p>Active fluid-level alerts from the simulation.</p></div>
+        <button class="primary-btn" id="ackAllBtn">Acknowledge all</button>
+      </div>
+      <div class="panel" style="margin-top:0">
+        <div id="alertPageList"></div>
+      </div>
+    </section>
+
+    <section class="page-view" id="page-history">
+      <div class="page-heading">
+        <div><h2>Event History</h2><p>Recorded simulation actions and status changes.</p></div>
+        <button class="primary-btn" id="exportBtn">↓ Export CSV</button>
+      </div>
+      <div class="panel" style="margin-top:0">
+        <input class="control search" id="historySearch" placeholder="Search event history..." aria-label="Search event history">
+        <div id="historyList" style="margin-top:15px"></div>
+      </div>
+    </section>
+
+    <section class="page-view" id="page-simulation">
+      <div class="page-heading">
+        <div><h2>Simulation Controls</h2><p>Test readings and demonstrate priority conditions.</p></div>
+        <button class="primary-btn" id="resetBtn">↻ Reset all</button>
+      </div>
+      <div class="panel" style="margin-top:0">
+        <h3>Simulation engine</h3>
+        <p class="muted" style="font-size:13px">Fluid consumption is calculated from each bed’s editable flow rate in mL/second while it is running.</p>
+        <div class="filters" style="margin-top:18px">
+          <button class="primary-btn" id="startSimBtn">▶ Start simulation</button>
+          <button class="icon-btn" id="pauseSimBtn">Ⅱ Pause simulation</button>
+          <label class="control">Speed
+            <select id="speedSelect" style="border:0;background:transparent;color:inherit">
+              <option value="1">1×</option><option value="2">2×</option><option value="5">5×</option><option value="10">10×</option>
+            </select>
+          </label>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Test scenarios</h3>
+        <p class="muted" style="font-size:13px">Use these controls to verify dashboard responses.</p>
+        <div id="scenarioControls"></div>
+        <div class="filters" style="margin-top:18px">
+          <button class="primary-btn" id="allLowBtn">All beds low fluid</button>
+          <button class="icon-btn" id="randomBtn">Random alert</button>
+          <button class="icon-btn" id="networkBtn">Toggle network demo</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="page-view" id="page-settings">
+      <div class="page-heading"><div><h2>Settings</h2><p>Configure prototype alert thresholds.</p></div></div>
+      <div class="panel" style="margin-top:0">
+        <h3>Fluid alert thresholds</h3>
+        <p class="muted" style="font-size:13px">Change the levels that trigger simulated warnings.</p>
+        <form id="settingsForm" style="max-width:420px">
+          <label class="label" for="lowThreshold">Low fluid warning (%)</label>
+          <input class="control" style="display:block;width:100%;margin:8px 0 18px" id="lowThreshold" type="number" min="16" max="60" value="30" required>
+          <label class="label" for="criticalThreshold">Critical fluid warning (%)</label>
+          <input class="control" style="display:block;width:100%;margin:8px 0 18px" id="criticalThreshold" type="number" min="1" max="15" value="15" required>
+          <button class="primary-btn" type="submit">Save thresholds</button>
+        </form>
+      </div>
+      <div class="panel">
+        <h3>About this prototype</h3>
+        <p class="muted" style="font-size:13px;line-height:1.8">Smart IV Monitor is a front-end demonstration using simulated in-memory readings. It does not connect to medical equipment, make clinical decisions, or control a real infusion clamp. Do not use it for patient care.</p>
+      </div>
+    </section>
+
+    <footer class="footer">Smart IV Monitor · Front-end simulation · Not for clinical use</footer>
+  </main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<script>
+"use strict";
+
+const patients = [
+  { bed:"102", name:"Patient A", id:"PT-001", bottle:500, fluid:100, drops:0, rate:20/3600, running:true, acknowledged:false },
+  { bed:"101", name:"Patient B", id:"PT-002", bottle:500, fluid:100, drops:0, rate:24/3600, running:true, acknowledged:false },
+  { bed:"103", name:"Patient C", id:"PT-003", bottle:500, fluid:100, drops:0, rate:18/3600, running:true, acknowledged:false }
+];
+
+let events = [];
+let simulationRunning = true;
+let simulationSpeed = 1;
+let networkOnline = true;
+let lowThreshold = 30;
+let criticalThreshold = 15;
+let toastTimer;
+
+const $ = id => document.getElementById(id);
+const timeNow = () => new Date().toLocaleTimeString();
+const getStatus = p => !networkOnline ? "offline" :
+  !p.running ? "paused" :
+  p.fluid <= criticalThreshold ? "critical" :
+  p.fluid <= lowThreshold ? "low" : "normal";
+
+function logEvent(message, bed="System") {
+  events.unshift({ time: new Date().toLocaleString(), bed, message });
+  renderHistory();
+}
+
+function toast(message) {
+  $("toast").textContent = message;
+  $("toast").style.display = "block";
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $("toast").style.display = "none", 3000);
+}
+
+function renderBed(p) {
+  const status = getStatus(p);
+  const critical = status === "critical";
+  const low = status === "low";
+  const paused = status === "paused";
+  const offline = status === "offline";
+  const levelClass = critical ? "critical" : low ? "low" : "";
+  const badgeText = {normal:"✓ NORMAL",low:"⚠ LOW FLUID",critical:"🚨 CRITICAL",paused:"Ⅱ PAUSED",offline:"● OFFLINE"}[status];
+  const alertText = critical ? "Critical fluid level. Immediate review required." :
+    low ? "Fluid level is low. Please review this simulated unit." :
+    paused ? "Infusion simulation is paused." :
+    offline ? "Network demo offline. Reading may be unavailable." :
+    "Fluid level within configured prototype threshold.";
+  const alertClass = critical ? "danger" : low ? "warning" : "";
+  const remaining = Math.round(p.bottle * p.fluid / 100);
+  const secondsLeft = p.rate > 0 ? remaining / p.rate : 0;
+  const timeLeft = p.rate > 0 ? (secondsLeft >= 3600 ? Math.floor(secondsLeft / 3600) + "h " + Math.round((secondsLeft % 3600) / 60) + "m" : secondsLeft >= 60 ? Math.floor(secondsLeft / 60) + "m " + Math.round(secondsLeft % 60) + "s" : Math.round(secondsLeft) + "s") : "—";
+
+  return `
+  <article class="bed-card ${critical ? "critical" : low ? "low" : ""}" data-testid="bed-card-${p.bed}">
+    <div class="bed-head">
+      <div><h4>🛏 Bed ${p.bed}</h4><div class="patient-id">${p.name} · ${p.id}</div></div>
+      <span class="badge ${status}">${badgeText}</span>
+    </div>
+    <div class="fluid-row">
+      <div><div class="label">FLUID REMAINING</div><div class="fluid-number">${p.fluid}<small>%</small></div></div>
+      <div style="text-align:right"><div class="label">VOLUME LEFT</div><strong>${remaining} mL</strong></div>
+    </div>
+    <div class="progress" role="progressbar" aria-label="Bed ${p.bed} fluid remaining" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${p.fluid}">
+      <div class="progress-bar ${levelClass}" style="width:${p.fluid}%"></div>
+    </div>
+    <div class="metrics">
+      <div class="metric"><span>💧 Drop count</span><strong>${p.drops}</strong></div>
+      <div class="metric"><span>↗ Flow rate</span><strong>${p.rate.toFixed(4)} <small style="font-size:11px">mL/s</small></strong></div>
+      <div class="metric"><span>◷ Est. time remaining</span><strong>${timeLeft}</strong></div>
+      <div class="metric"><span>⚖ Bottle weight*</span><strong>${remaining} g</strong></div>
+    </div>
+    <div class="alert-strip ${alertClass}">${alertText}</div>
+    <div class="card-actions">
+      <button class="small-btn primary" data-action="drop" data-bed="${p.bed}">💧 Drop</button>
+      <button class="small-btn" data-action="toggle" data-bed="${p.bed}">${p.running ? "Ⅱ Pause" : "▶ Start"}</button>
+      <button class="small-btn" data-action="low" data-bed="${p.bed}">⚠ Low</button>
+      <button class="small-btn" data-action="critical" data-bed="${p.bed}">🚨 Critical</button>
+      <button class="small-btn" data-action="reset" data-bed="${p.bed}">↻ Reset</button>
+    </div>
+    <div style="margin-top:10px;font-size:10px;color:var(--muted)">Flow rate (mL/second):
+      <input class="control rate-input" data-bed="${p.bed}" type="number" min="0.0001" max="1" step="0.0001" value="${p.rate.toFixed(4)}" aria-label="Flow rate in milliliters per second for bed ${p.bed}" style="padding:5px;font-size:11px;min-height:30px;width:105px">
+      <span>Adjust this value to change how quickly the bottle empties.</span>
+    </div>
+    <div style="margin-top:10px;font-size:10px;color:var(--muted)">Bottle: 
+      <select class="control bottle-select" data-bed="${p.bed}" aria-label="Bottle size for bed ${p.bed}" style="padding:5px;font-size:11px;min-height:30px">
+        ${[100,250,500,1000].map(n=>`<option value="${n}" ${p.bottle===n?"selected":""}>${n} mL</option>`).join("")}
+      </select>
+      · *Illustrative estimate, not a measured weight.
+    </div>
+  </article>`;
+}
+
+function renderDashboard() {
+  $("totalStat").textContent = patients.length;
+  $("runningStat").textContent = patients.filter(p => p.running).length;
+  $("lowStat").textContent = patients.filter(p => p.fluid <= lowThreshold).length;
+  $("criticalStat").textContent = patients.filter(p => p.fluid <= criticalThreshold).length;
+  const activeAlerts = patients.filter(p => p.fluid <= lowThreshold && !p.acknowledged);
+  $("navAlertCount").textContent = activeAlerts.length ? `(${activeAlerts.length})` : "";
+
+  const query = $("searchInput").value.trim().toLowerCase();
+  const filter = $("statusFilter").value;
+  const sorted = [...patients].sort((a,b) => a.fluid-b.fluid);
+  const visible = sorted.filter(p =>
+    (p.bed.includes(query) || p.id.toLowerCase().includes(query) || p.name.toLowerCase().includes(query)) &&
+    (filter === "all" || getStatus(p) === filter)
+  );
+  $("bedGrid").innerHTML = visible.length
+    ? visible.map(renderBed).join("")
+    : '<div class="empty" style="grid-column:1/-1">No beds match your filters.</div>';
+
+  const critical = sorted.filter(p => p.fluid <= criticalThreshold);
+  const low = sorted.filter(p => p.fluid > criticalThreshold && p.fluid <= lowThreshold);
+  const priority = [
+    ...critical.map(p=>({p,level:"Critical",icon:"🚨"})),
+    ...low.map(p=>({p,level:"Warning",icon:"⚠️"}))
+  ];
+  $("priorityList").innerHTML = priority.length ? priority.map(({p,level,icon})=>`
+    <div class="priority-item"><span class="priority-dot">${icon}</span><div><strong>${level} · Bed ${p.bed}</strong><span class="muted">${p.fluid}% remaining · ${Math.round(p.bottle*p.fluid/100)} mL left · ${p.acknowledged?"Acknowledged":"Needs review"}</span></div></div>
+  `).join("") : '<div class="empty">✓ No active fluid-level priorities.</div>';
+
+  renderAlerts();
+  renderScenarios();
+}
+
+function renderAlerts() {
+  const active = [...patients].filter(p=>p.fluid<=lowThreshold);
+  $("alertPageList").innerHTML = active.length ? active.map(p=>`
+    <div class="priority-item">
+      <span class="priority-dot">${p.fluid<=criticalThreshold?"🚨":"⚠️"}</span>
+      <div style="flex:1"><strong>Bed ${p.bed} · ${p.fluid<=criticalThreshold?"Critical fluid level":"Low fluid warning"}</strong><span class="muted">${p.fluid}% remaining · ${p.acknowledged?"Acknowledged":"Unacknowledged"}</span></div>
+      <button class="small-btn" data-action="ack" data-bed="${p.bed}">${p.acknowledged?"Acknowledged":"Acknowledge"}</button>
+    </div>`).join("") : '<div class="empty">✓ No active alerts. All simulated fluid levels are within thresholds.</div>';
+}
+
+function renderHistory() {
+  const query = $("historySearch") ? $("historySearch").value.toLowerCase() : "";
+  const filtered = events.filter(e=>(e.message+" "+e.bed+" "+e.time).toLowerCase().includes(query));
+  $("historyList").innerHTML = filtered.length ? filtered.map(e=>`
+    <div class="event-row"><div><strong>${escapeHTML(e.message)}</strong><div class="muted" style="margin-top:5px">${escapeHTML(e.bed)}</div></div><span class="muted">${escapeHTML(e.time)}</span></div>
+  `).join("") : '<div class="empty">No events recorded yet.</div>';
+}
+
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, ch => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[ch]);
+}
+
+function renderScenarios() {
+  $("scenarioControls").innerHTML = patients.map(p=>`
+    <div class="event-row" style="align-items:center;flex-wrap:wrap">
+      <strong>Bed ${p.bed}</strong>
+      <div class="filters">
+        <button class="small-btn" data-action="low" data-bed="${p.bed}">Low fluid</button>
+        <button class="small-btn" data-action="critical" data-bed="${p.bed}">Empty / critical</button>
+        <button class="small-btn" data-action="fast" data-bed="${p.bed}">Fast drip</button>
+        <button class="small-btn" data-action="slow" data-bed="${p.bed}">Slow drip</button>
+        <button class="small-btn" data-action="ack" data-bed="${p.bed}">Acknowledge</button>
+      </div>
+    </div>`).join("");
+}
+
+function renderAll() {
+  renderDashboard();
+  renderHistory();
+}
+async function syncBedWithBackend(bed, status) {
+ try {
+ const response = await fetch(`/api/bed/${Number(bed)}/status`, {
+   method: "POST",
+ headers: {
+"Content-Type": "application/json"
+ },
+body: JSON.stringify({ status: status })
+});
+if (!response.ok) {
+throw new Error("Backend update failed");
+  }
+console.log(`Bed ${bed} synced: ${status}`);
+} catch (error) {
+   console.error("Backend connection error:", error);
+    toast("Backend connection failed. Check the Flask server.");
+  }
+}
+function handleAction(action, bed) {
+  const p = patients.find(p=>p.bed===bed);
+  if (!p) return;
+  switch(action) {
+    case "drop":
+      if(p.fluid>0) {
+        p.fluid=Math.max(0,p.fluid-1);
+        p.drops++;
+        p.acknowledged=false;
+        logEvent("Manual simulated drop", "Bed "+bed);
+      } else toast("Bag is empty. Reset the scenario to continue.");
+      break;
+    case "toggle":
+      p.running=!p.running;
+      logEvent(p.running?"Simulation started":"Simulation paused","Bed "+bed);
+      break;
+    case "low":
+	p.fluid = 25;
+	p.acknowledged = false;
+	syncBedWithBackend(bed, "LOW");
+	logEvent("Low-fluid scenario triggered", "Bed " + bed);
+	toast("Low-fluid warning triggered for Bed " + bed);
+	break;
+    case "critical":
+	p.fluid = 10;
+	p.acknowledged = false;
+	syncBedWithBackend(bed, "CRITICAL");
+	logEvent("Critical / near - empty scenario triggered", "Bed " + bed);
+	toast("Cricital fluid alert triggered for Bed " + bed);
+	break;
+    case "fast":
+      p.rate=45/3600; p.acknowledged=false;
+      logEvent("Fast drip scenario triggered","Bed "+bed);
+      toast("Fast flow scenario enabled");
+      break;
+    case "slow":
+      p.rate=5/3600; p.acknowledged=false;
+      logEvent("Slow drip scenario triggered","Bed "+bed);
+      toast("Slow flow scenario enabled");
+      break;
+    case "ack":
+      p.acknowledged=true;
+      logEvent("Alert acknowledged","Bed "+bed);
+      toast("Alert acknowledged for Bed "+bed);
+      break;
+    case "reset":
+	p.fluid = 100;
+	p.drops = 0;
+	p.rate = 20 / 3600;
+	p.running = true;
+	p.acknowledged = false;
+	sincBedWithBackend(bed, "NORMAL");
+	logEvent("Bed reset to initial values", "Bed " + bed);
+	 break;
+  }
+  renderAll();
+}
+
+document.addEventListener("click", e=>{
+  const btn=e.target.closest("[data-action]");
+  if(btn) handleAction(btn.dataset.action,btn.dataset.bed);
+  const nav=e.target.closest("[data-page]");
+  if(nav) showPage(nav.dataset.page);
+  const goto=e.target.closest("[data-goto]");
+  if(goto) showPage(goto.dataset.goto);
+});
+
+document.addEventListener("change", e=>{
+  if(e.target.matches(".rate-input")) {
+    const p=patients.find(p=>p.bed===e.target.dataset.bed);
+    const rate=Number(e.target.value);
+    if(p && Number.isFinite(rate) && rate >= 0.0001 && rate <= 1) {
+      p.rate=rate;
+      p.acknowledged=false;
+      logEvent("Flow rate changed to "+rate.toFixed(4)+" mL/s", "Bed "+p.bed);
+      renderAll();
+    } else {
+      toast("Enter a flow rate between 0.0001 and 1 mL/s.");
+      renderAll();
+    }
+  }
+  if(e.target.matches(".bottle-select")) {
+    const p=patients.find(p=>p.bed===e.target.dataset.bed);
+    if(p) {
+      p.bottle=Number(e.target.value); p.fluid=100; p.drops=0; p.acknowledged=false;
+      logEvent("Bottle size changed to "+p.bottle+" mL","Bed "+p.bed);
+      renderAll();
+    }
+  }
+});
+
+function showPage(page) {
+  document.querySelectorAll(".page-view").forEach(el=>el.classList.remove("active"));
+  const target=$("page-"+page);
+  if(target) target.classList.add("active");
+  document.querySelectorAll("[data-page]").forEach(el=>el.classList.toggle("active",el.dataset.page===page));
+  if(page==="alerts") renderAlerts();
+  if(page==="history") renderHistory();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+$("searchInput").addEventListener("input",renderDashboard);
+$("statusFilter").addEventListener("change",renderDashboard);
+$("historySearch").addEventListener("input",renderHistory);
+$("refreshBtn").addEventListener("click",()=>{renderAll();toast("Dashboard refreshed");});
+
+$("themeToggle").addEventListener("click",()=>{
+  document.body.classList.toggle("dark");
+  const dark=document.body.classList.contains("dark");
+  $("themeToggle").textContent=dark?"☀":"☾";
+  $("themeToggle").setAttribute("aria-label",dark?"Switch to light mode":"Switch to dark mode");
+});
+
+$("ackAllBtn").addEventListener("click",()=>{
+  patients.filter(p=>p.fluid<=lowThreshold).forEach(p=>p.acknowledged=true);
+  logEvent("All active alerts acknowledged");
+  renderAll(); toast("Active alerts acknowledged");
+});
+
+$("resetBtn").addEventListener("click",()=>{
+  patients.forEach(p=>Object.assign(p,{fluid:100,drops:0,rate:20/3600,running:true,acknowledged:false}));
+  logEvent("All beds reset");
+  renderAll(); toast("All simulated beds reset");
+});
+
+$("startSimBtn").addEventListener("click",()=>{
+  simulationRunning=true; logEvent("Simulation engine started"); toast("Simulation started");
+});
+$("pauseSimBtn").addEventListener("click",()=>{
+  simulationRunning=false; logEvent("Simulation engine paused"); toast("Simulation paused");
+});
+$("speedSelect").addEventListener("change",e=>{
+  simulationSpeed=Number(e.target.value);
+  logEvent("Simulation speed changed to "+simulationSpeed+"x");
+});
+
+$("allLowBtn").addEventListener("click",()=>{
+  patients.forEach(p=>{p.fluid=25;p.acknowledged=false;});
+  logEvent("Global scenario: all beds low fluid");
+  renderAll(); toast("Low-fluid scenario enabled for all beds");
+});
+
+$("randomBtn").addEventListener("click",()=>{
+  const p=patients[Math.floor(Math.random()*patients.length)];
+  const scenarios=["low","critical","fast","slow"];
+  handleAction(scenarios[Math.floor(Math.random()*scenarios.length)],p.bed);
+});
+
+$("networkBtn").addEventListener("click",()=>{
+  networkOnline=!networkOnline;
+  document.querySelector(".connection").textContent=networkOnline?"● Demo connected":"● Demo offline";
+  document.querySelector(".connection").style.color=networkOnline?"var(--green)":"var(--red)";
+  logEvent(networkOnline?"Network demo restored":"Network drop simulated");
+  renderAll(); toast(networkOnline?"Demo network restored":"Network drop simulated");
+});
+
+$("settingsForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const low=Number($("lowThreshold").value);
+  const critical=Number($("criticalThreshold").value);
+  if(!Number.isFinite(low)||!Number.isFinite(critical)||critical>=low) {
+    toast("Critical threshold must be lower than low-fluid threshold.");
+    return;
+  }
+  lowThreshold=low; criticalThreshold=critical;
+  logEvent("Alert thresholds updated: low "+low+"%, critical "+critical+"%");
+  renderAll(); toast("Thresholds saved");
+});
+
+$("exportBtn").addEventListener("click",()=>{
+  const rows=[["Time","Bed","Event"],...events.map(e=>[e.time,e.bed,e.message])];
+  const csv=rows.map(row=>row.map(value=>'"'+String(value).replace(/"/g,'""')+'"').join(",")).join("\r\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url; a.download="smart-iv-event-history.csv"; a.click();
+  URL.revokeObjectURL(url);
+  toast("Event history exported");
+});
+
+setInterval(()=>{
+  $("clock").textContent=new Date().toLocaleTimeString();
+},1000);
+
+setInterval(()=>{
+  if(!simulationRunning || !networkOnline) return;
+  patients.forEach(p=>{
+    if(!p.running || p.fluid<=0) return;
+    // Flow rate is expressed in mL/second. Each tick represents 5 simulated seconds.
+    // Simulation speed is a demo multiplier, not a real infusion-device setting.
+    const consumedMl=p.rate*5*simulationSpeed;
+    const consumedPercent=(consumedMl/p.bottle)*100;
+    p.fluid=Math.max(0,Math.round((p.fluid-consumedPercent)*10000)/10000);
+    if(p.fluid===0) p.running=false;
+    if(p.fluid<=lowThreshold && !p.acknowledged && p.fluid>0) {
+      // Dashboard state communicates the warning without repeatedly logging it.
+    }
+  });
+  renderAll();
+},5000);
+
+renderAll();
+logEvent("Smart IV prototype initialized");
+</script>
+</body>
+</html>
+
